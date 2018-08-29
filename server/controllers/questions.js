@@ -144,7 +144,6 @@ module.exports = {
             }, {
                 $push: {
                     answer: req.body.answer,
-                    name: decode.name
                 }
             })
             .then(answer => {
@@ -160,8 +159,6 @@ module.exports = {
                     error
                 })
             })
-
-
     },
     upVote: (req, res) => {
         let id = req.params.id
@@ -226,7 +223,7 @@ module.exports = {
                         });
                 } else {
                     res.status(200).json({
-                        message: 'sudah nge-vote!'
+                        message: 'already use'
                     })
                 }
 
@@ -243,41 +240,43 @@ module.exports = {
         let id = req.params.id
         let token = req.headers.token
         let idAnswer = req.body.dataAnswer._id
-        let decode = jwt.verify(token, process.env.JWT_SECRET_KEY)
-        Questions.find({
+        let decode = jwt.verify(token, tokenjwt)
+
+        Question
+        .find({
                 _id: id
             })
             .then((result) => {
 
-                let status = false
-                let dataTmpAnswer
+                let answerStatus = false
+                let resetAnswer
                 result[0].answer.forEach(element => {
                     if (element._id == idAnswer) {
-                        dataTmpAnswer = element
+                        resetAnswer = element
                     }
                 })
-                dataTmpAnswer.downvote.forEach(element => {
+                resetAnswer.downvote.forEach(element => {
                     if (element.userId == decode.id) {
-                        status = true
+                        answerStatus = true
                     }
                 })
-                dataTmpAnswer.upvote.forEach(element => {
+                resetAnswer.upvote.forEach(element => {
                     if (element.userId == decode.id) {
-                        status = true
+                        answerStatus = true
                     }
                 })
-                dataTmpAnswer.downvote.push({
+                resetAnswer.downvote.push({
                     userId: decode.id
                 })
                 let allAnswer = result[0].answer
                 allAnswer.forEach(element => {
                     if (element._id == idAnswer) {
-                        element = dataTmpAnswer
+                        element = resetAnswer
                     }
 
                 })
 
-                if (status == false) {
+                if (answerStatus == false) {
                     Questions.updateOne({
                             _id: id
                         }, {
@@ -287,7 +286,7 @@ module.exports = {
                         })
                         .then((result) => {
                             res.status(200).json({
-                                message: 'upvote berhasil!'
+                                message: 'success'
                             })
                         })
                         .catch((err) => {
@@ -297,7 +296,7 @@ module.exports = {
                         });
                 } else {
                     res.status(200).json({
-                        message: 'sudah nge-vote!'
+                        message: 'already use'
                     })
                 }
 
@@ -308,12 +307,6 @@ module.exports = {
                 })
 
             });
-
-
-
-
-
-
     },
     editAnswer: (req, res) => {
 
